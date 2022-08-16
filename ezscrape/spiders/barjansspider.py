@@ -2,8 +2,15 @@ import scrapy
 import re
 
 class CistilnaSredstva(scrapy.Spider):
-    name = 'cistlinasredstva'
-    start_urls = ['https://www.barjans.si/cistilna-sredstva']
+    name = 'barjansspider'
+    start_urls = [
+        'https://www.barjans.si/potrosni-material-in-podajalniki',
+        'https://www.barjans.si/gostinski-program',
+        'https://www.barjans.si/cistilna-sredstva',
+        'https://www.barjans.si/pripomocki-za-ciscenje',
+        'https://www.barjans.si/zascita-in-osebna-nega',
+        'https://www.barjans.si/oprema-franke'
+    ]
 
     def parse(self, response):
         for products in response.css('div.grid-items')[0].css('div.item > div.item-body'):
@@ -13,6 +20,6 @@ class CistilnaSredstva(scrapy.Spider):
                 'link': response.urljoin(products.css('div.item-title').css('h3').css('a').attrib['href']),
                 'sifra': re.findall(r'\d+', products.css('small::text').get())[0]
             }
-        next_page = response.urljoin(response.css('span.page.next').css('a').attrib['href'])
-        if next_page is not None:
-            yield response.follow(next_page, callback=self.parse)
+        next_page_short = response.css('span.page.next').css('a')
+        if len(next_page_short):
+            yield response.follow(response.urljoin(next_page_short.attrib['href']), callback=self.parse)
